@@ -92,6 +92,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
       buildTip(context),
       if (!isOutgoingOnly) buildIDBoard(context),
       if (!isOutgoingOnly) buildPasswordBoard(context),
+      if (!isOutgoingOnly) buildSupportButton(context),
       FutureBuilder<Widget>(
         future: Future.value(
             Obx(() => buildHelpCards(stateGlobal.updateUrl.value))),
@@ -382,6 +383,72 @@ class _DesktopHomePageState extends State<DesktopHomePage>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget buildSupportButton(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(left: 20.0, right: 16.0, top: 4.0, bottom: 10.0),
+      child: Material(
+        color: const Color(0xFF25D366).withOpacity(0.12),
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          hoverColor: const Color(0xFF25D366).withOpacity(0.22),
+          onTap: () {
+            final id = gFFI.serverModel.serverId.text.trim();
+            final text = id.isNotEmpty
+                ? 'Hola Soporte Kore, necesito asistencia técnica con mi equipo (ID: $id).'
+                : 'Hola Soporte Kore, necesito asistencia técnica con mi equipo.';
+            final url = 'https://wa.me/51959595000?text=${Uri.encodeComponent(text)}';
+            launchUrl(Uri.parse(url));
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.chat_bubble_outline_rounded,
+                  color: Color(0xFF25D366),
+                  size: 20,
+                ).marginOnly(right: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        "WhatsApp Soporte",
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF15803D),
+                        ),
+                      ),
+                      Text(
+                        "+51 959 595 000",
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.color
+                              ?.withOpacity(0.7),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.open_in_new,
+                  size: 14,
+                  color: Color(0xFF25D366),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
