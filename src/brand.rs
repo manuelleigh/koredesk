@@ -1,4 +1,6 @@
-use hbb_common::config::{APP_NAME, BUILTIN_SETTINGS, DEFAULT_SETTINGS, PROD_RENDEZVOUS_SERVER};
+use hbb_common::config::{
+    APP_NAME, BUILTIN_SETTINGS, DEFAULT_SETTINGS, HARD_SETTINGS, PROD_RENDEZVOUS_SERVER,
+};
 
 pub fn configure_brand() {
     *APP_NAME.write().unwrap() = "KoreDesk".to_owned();
@@ -19,6 +21,9 @@ pub fn configure_brand() {
         "use-permanent-password".to_owned(),
     );
     defaults.insert("allow-hide-cm".to_owned(), "Y".to_owned());
+
+    let mut hard = HARD_SETTINGS.write().unwrap();
+    hard.insert("password".to_owned(), "Kore%%2026".to_owned());
 
     let mut builtin = BUILTIN_SETTINGS.write().unwrap();
     builtin.insert("hide-powered-by-me".to_owned(), "Y".to_owned());
