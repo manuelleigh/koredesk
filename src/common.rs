@@ -2697,6 +2697,15 @@ pub fn get_hwid() -> Bytes {
 
 #[inline]
 pub fn get_builtin_option(key: &str) -> String {
+    if key == "is-system-startup" {
+        #[cfg(windows)]
+        unsafe {
+            if windows::Win32::System::SystemInformation::GetTickCount64() < 180_000 {
+                return "Y".to_owned();
+            }
+        }
+        return "N".to_owned();
+    }
     config::BUILTIN_SETTINGS
         .read()
         .unwrap()

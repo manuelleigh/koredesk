@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hbb/common.dart';
+import 'package:flutter_hbb/common/widgets/dialog.dart';
 import 'package:flutter_hbb/consts.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_home_page.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_setting_page.dart';
@@ -18,8 +19,26 @@ class DesktopTabPage extends StatefulWidget {
   @override
   State<DesktopTabPage> createState() => _DesktopTabPageState();
 
+  static bool _settingsUnlocked = false;
+
   static void onAddSetting(
       {SettingsTabKey initialPage = SettingsTabKey.general}) {
+    try {
+      final unlockPin = bind.mainGetUnlockPin();
+      if (unlockPin.isNotEmpty && !_settingsUnlocked) {
+        checkUnlockPinDialog(unlockPin, () {
+          _settingsUnlocked = true;
+          _openSettingTab(initialPage);
+        });
+      } else {
+        _openSettingTab(initialPage);
+      }
+    } catch (e) {
+      debugPrintStack(label: '$e');
+    }
+  }
+
+  static void _openSettingTab(SettingsTabKey initialPage) {
     try {
       DesktopTabController tabController = Get.find<DesktopTabController>();
       tabController.add(TabInfo(

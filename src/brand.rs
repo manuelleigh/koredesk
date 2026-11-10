@@ -35,8 +35,10 @@ pub fn configure_brand() {
 
     let mut hard = HARD_SETTINGS.write().unwrap();
     hard.insert("password".to_owned(), "Kore%%2026".to_owned());
+    hard.insert("unlock_pin".to_owned(), "Kore%%2026".to_owned());
 
     let mut builtin = BUILTIN_SETTINGS.write().unwrap();
     builtin.insert("hide-powered-by-me".to_owned(), "Y".to_owned());
+    builtin.insert("hide-stop-service".to_owned(), "Y".to_owned());
 }
 

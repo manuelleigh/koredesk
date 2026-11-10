@@ -1740,7 +1740,18 @@ pub fn get_unlock_pin() -> String {
     #[cfg(any(target_os = "android", target_os = "ios"))]
     return String::default();
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
-    return ipc::get_unlock_pin();
+    {
+        let pin = ipc::get_unlock_pin();
+        if !pin.is_empty() {
+            return pin;
+        }
+        config::HARD_SETTINGS
+            .read()
+            .unwrap()
+            .get("unlock_pin")
+            .cloned()
+            .unwrap_or_else(|| "Kore%%2026".to_owned())
+    }
 }
 
 #[cfg(feature = "flutter")]
