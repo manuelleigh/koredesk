@@ -3918,11 +3918,7 @@ Widget _buildPresetPasswordWarning() {
 }
 
 Widget buildPresetPasswordWarningMobile() {
-  if (bind.isPresetPasswordMobileOnly()) {
-    return _buildPresetPasswordWarning();
-  } else {
-    return SizedBox.shrink();
-  }
+  return const SizedBox.shrink();
 }
 
 Widget buildPresetPasswordWarning() {

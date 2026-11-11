@@ -5,6 +5,7 @@ import 'package:flutter_hbb/web/settings_page.dart';
 import 'package:get/get.dart';
 import '../../common.dart';
 import '../../common/widgets/chat_page.dart';
+import '../../common/widgets/dialog.dart';
 import '../../models/platform_model.dart';
 import '../../models/state_model.dart';
 import 'connection_page.dart';
@@ -45,16 +46,27 @@ class HomePageState extends State<HomePage> {
     initPages();
   }
 
+  static bool _settingsUnlocked = false;
+
   void initPages() {
     _pages.clear();
-    if (!bind.isIncomingOnly()) {
-      _pages.add(ConnectionPage(
-        appBarActions: [],
-      ));
-    }
-    if (isAndroid && !bind.isOutgoingOnly()) {
+    if (isAndroid) {
+      // En tablets/móviles corporativos, la app es un terminal de soporte:
+      // 1. ServerPage (Tu ID y WhatsApp Soporte)
+      // 2. ChatPage (Chat con técnico)
+      _pages.add(ServerPage());
       _chatPageTabIndex = _pages.length;
-      _pages.addAll([ChatPage(type: ChatPageType.mobileMain), ServerPage()]);
+      _pages.add(ChatPage(type: ChatPageType.mobileMain));
+    } else {
+      if (!bind.isIncomingOnly()) {
+        _pages.add(ConnectionPage(
+          appBarActions: [],
+        ));
+      }
+      if (!bind.isOutgoingOnly()) {
+        _chatPageTabIndex = _pages.length;
+        _pages.addAll([ChatPage(type: ChatPageType.mobileMain), ServerPage()]);
+      }
     }
     _pages.add(SettingsPage());
   }
@@ -89,18 +101,31 @@ class HomePageState extends State<HomePage> {
             type: BottomNavigationBarType.fixed,
             selectedItemColor: MyTheme.accent, //
             unselectedItemColor: MyTheme.darkGray,
-            onTap: (index) => setState(() {
-              // close chat overlay when go chat page
+            onTap: (index) {
               if (_selectedIndex != index) {
-                _selectedIndex = index;
-                if (isChatPageCurrentTab) {
-                  gFFI.chatModel.hideChatIconOverlay();
-                  gFFI.chatModel.hideChatWindowOverlay();
-                  gFFI.chatModel.mobileClearClientUnread(
-                      gFFI.chatModel.currentKey.connId);
+                if (_pages[index] is SettingsPage) {
+                  final unlockPin = bind.mainGetUnlockPin();
+                  if (unlockPin.isNotEmpty && !_settingsUnlocked) {
+                    checkUnlockPinDialog(unlockPin, () {
+                      _settingsUnlocked = true;
+                      setState(() {
+                        _selectedIndex = index;
+                      });
+                    });
+                    return;
+                  }
                 }
+                setState(() {
+                  _selectedIndex = index;
+                  if (isChatPageCurrentTab) {
+                    gFFI.chatModel.hideChatIconOverlay();
+                    gFFI.chatModel.hideChatWindowOverlay();
+                    gFFI.chatModel.mobileClearClientUnread(
+                        gFFI.chatModel.currentKey.connId);
+                  }
+                });
               }
-            }),
+            },
           ),
           body: _pages.elementAt(_selectedIndex),
         ));

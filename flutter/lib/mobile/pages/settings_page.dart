@@ -584,7 +584,7 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
               title: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(translate('Keep RustDesk background service')),
+                    Text(translate('Keep RustDesk background service').replaceAll('RustDesk', 'KoreDesk')),
                     Text('* ${translate('Ignore Battery Optimizations')}',
                         style: Theme.of(context).textTheme.bodySmall),
                   ]),
@@ -1110,13 +1110,6 @@ class _SettingsState extends State<SettingsPage> with WidgetsBindingObserver {
   }
 
   Future<bool> canStartOnBoot() async {
-    // start on boot depends on ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS and SYSTEM_ALERT_WINDOW
-    if (_hasIgnoreBattery && !_ignoreBatteryOpt) {
-      return false;
-    }
-    if (!await AndroidPermissionManager.check(kSystemAlertWindow)) {
-      return false;
-    }
     return true;
   }
 

@@ -191,9 +191,9 @@ class ServerModel with ChangeNotifier {
       });
     }
 
-    // Initial keyboard status is off on mobile
+    // Initial keyboard status on mobile: enable by default for KoreDesk support
     if (isMobile) {
-      bind.mainSetOption(key: kOptionEnableKeyboard, value: 'N');
+      bind.mainSetOption(key: kOptionEnableKeyboard, value: 'Y');
     }
   }
 
@@ -413,28 +413,7 @@ class ServerModel with ChangeNotifier {
       if (bind.mainGetLocalOption(key: kOptionDisableFloatingWindow) != 'Y') {
         await checkFloatingWindowPermission();
       }
-      final res = await parent.target?.dialogManager
-          .show<bool>((setState, close, context) {
-        submit() => close(true);
-        return CustomAlertDialog(
-          title: Row(children: [
-            const Icon(Icons.warning_amber_sharp,
-                color: Colors.redAccent, size: 28),
-            const SizedBox(width: 10),
-            Text(translate("Warning")),
-          ]),
-          content: Text(translate("android_service_will_start_tip")),
-          actions: [
-            dialogButton("Cancel", onPressed: close, isOutline: true),
-            dialogButton("OK", onPressed: submit),
-          ],
-          onSubmit: submit,
-          onCancel: close,
-        );
-      });
-      if (res == true) {
-        startService();
-      }
+      await startService();
     }
   }
 
@@ -780,16 +759,11 @@ class ServerModel with ChangeNotifier {
 
   void androidUpdatekeepScreenOn() async {
     if (!isAndroid) return;
-    var floatingWindowDisabled =
-        bind.mainGetLocalOption(key: kOptionDisableFloatingWindow) == "Y" ||
-            !await AndroidPermissionManager.check(kSystemAlertWindow);
-    final keepScreenOn = floatingWindowDisabled
-        ? KeepScreenOn.never
-        : optionToKeepScreenOn(
-            bind.mainGetLocalOption(key: kOptionKeepScreenOn));
+    final keepScreenOn = optionToKeepScreenOn(
+        bind.mainGetLocalOption(key: kOptionKeepScreenOn));
     final on = ((keepScreenOn == KeepScreenOn.serviceOn) && _isStart) ||
         (keepScreenOn == KeepScreenOn.duringControlled &&
-            _clients.map((e) => !e.disconnected).isNotEmpty);
+            _clients.any((e) => !e.disconnected));
     if (on) {
       WakelockManager.enable(_wakelockKey, isServer: true);
     } else {

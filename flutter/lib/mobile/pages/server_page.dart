@@ -19,10 +19,10 @@ import 'home_page.dart';
 
 class ServerPage extends StatefulWidget implements PageShape {
   @override
-  final title = translate("Share screen");
+  final title = translate("Your Device");
 
   @override
-  final icon = const Icon(Icons.mobile_screen_share);
+  final icon = const Icon(Icons.perm_identity);
 
   @override
   final appBarActions = (!bind.isDisableSettings() &&
@@ -191,6 +191,18 @@ class _ServerPageState extends State<ServerPage> {
       await gFFI.serverModel.fetchID();
     });
     gFFI.serverModel.checkAndroidPermission();
+    if (isAndroid) {
+      if (!gFFI.serverModel.isStart) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          gFFI.serverModel.startService();
+        });
+      }
+      Future.delayed(const Duration(seconds: 1), () async {
+        if (!await AndroidPermissionManager.check(kRequestIgnoreBatteryOptimizations)) {
+          AndroidPermissionManager.request(kRequestIgnoreBatteryOptimizations);
+        }
+      });
+    }
   }
 
   @override
@@ -211,10 +223,9 @@ class _ServerPageState extends State<ServerPage> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        buildPresetPasswordWarningMobile(),
-                        gFFI.serverModel.isStart
-                            ? ServerInfo()
-                            : ServiceNotRunningNotification(),
+                        ServerInfo(),
+                        if (!gFFI.serverModel.isStart)
+                          ServiceNotRunningNotification(),
                         const ConnectionManager(),
                         const PermissionChecker(),
                         SizedBox.fromSize(size: const Size(0, 15.0)),
@@ -250,13 +261,7 @@ class ServiceNotRunningNotification extends StatelessWidget {
             ElevatedButton.icon(
                 icon: const Icon(Icons.play_arrow),
                 onPressed: () {
-                  if (gFFI.userModel.userName.value.isEmpty &&
-                      bind.mainGetLocalOption(key: "show-scam-warning") !=
-                          "N") {
-                    showScamWarning(context, serverModel);
-                  } else {
-                    serverModel.toggleService();
-                  }
+                  serverModel.startService();
                 },
                 label: Text(translate("Start service")))
           ],
@@ -622,6 +627,67 @@ class ServerInfo extends StatelessWidget {
                 ),
               ),
             ),
+            const SizedBox(height: 10),
+            if (!serverModel.inputOk)
+              Material(
+                color: Colors.orange.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(8),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: () {
+                    AndroidPermissionManager.startAction(kActionAccessibilitySettings);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.touch_app, color: Colors.orange, size: 22).marginOnly(right: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Text(
+                                "Activar Control Táctil",
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.orange,
+                                ),
+                              ),
+                              Text(
+                                "Toca aquí para permitir el control remoto en Accesibilidad",
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Icon(Icons.chevron_right, size: 20, color: Colors.orange),
+                      ],
+                    ),
+                  ),
+                ),
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+                child: Row(
+                  children: [
+                    const Icon(Icons.check_circle_outline, color: Color(0xFF15803D), size: 18).marginOnly(right: 6),
+                    const Text(
+                      "Control remoto táctil habilitado",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF15803D),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
           ],
         ));
   }
@@ -644,7 +710,7 @@ class _PermissionCheckerState extends State<PermissionChecker> {
                 title: Text(translate('Change Path')),
                 content: Column(mainAxisSize: MainAxisSize.min, children: [
                   ListTile(
-                    title: Text(translate('RustDesk storage')),
+                    title: const Text('KoreDesk storage'),
                     onTap: () => close(true),
                   ),
                   ListTile(
@@ -704,11 +770,7 @@ class _PermissionCheckerState extends State<PermissionChecker> {
             PermissionRow(
                 translate("Screen Capture"),
                 serverModel.mediaOk,
-                !serverModel.mediaOk &&
-                        gFFI.userModel.userName.value.isEmpty &&
-                        bind.mainGetLocalOption(key: "show-scam-warning") != "N"
-                    ? () => showScamWarning(context, serverModel)
-                    : serverModel.toggleService),
+                serverModel.toggleService),
           PermissionRow(
             translate("Input Control"),
             serverModel.inputOk,
@@ -1063,10 +1125,5 @@ void androidChannelInit() {
 }
 
 void showScamWarning(BuildContext context, ServerModel serverModel) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return ScamWarningDialog(serverModel: serverModel);
-    },
-  );
+  serverModel.startService();
 }
