@@ -33,13 +33,33 @@ def get_base_emblem():
     raise FileNotFoundError("Neither kore_pe.png nor LogoKoreFondoBlanco.jpg found!")
 
 def make_square_emblem(emblem, size):
-    # Resize with aspect ratio preserved and centered
+    # Resize with aspect ratio preserved and centered on transparent canvas
     img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     emblem_copy = emblem.copy()
     emblem_copy.thumbnail((size, size), Image.LANCZOS)
     offset = ((size - emblem_copy.size[0]) // 2, (size - emblem_copy.size[1]) // 2)
     img.paste(emblem_copy, offset, emblem_copy)
     return img
+
+def make_square_rounded_icon(emblem, size):
+    # Desktop and app icon: rounded white squircle background with centered emblem
+    s4 = size * 4
+    mask = Image.new("L", (s4, s4), 0)
+    draw = ImageDraw.Draw(mask)
+    radius = int(s4 * 0.175)
+    draw.rounded_rectangle((0, 0, s4 - 1, s4 - 1), radius=radius, fill=255)
+    mask = mask.resize((size, size), Image.LANCZOS)
+
+    bg = Image.new("RGBA", (size, size), (255, 255, 255, 255))
+    result = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    result.paste(bg, (0, 0), mask)
+
+    emblem_sz = int(size * 0.72)
+    emblem_copy = emblem.copy()
+    emblem_copy.thumbnail((emblem_sz, emblem_sz), Image.LANCZOS)
+    offset = ((size - emblem_copy.size[0]) // 2, (size - emblem_copy.size[1]) // 2)
+    result.paste(emblem_copy, offset, emblem_copy)
+    return result
 
 def create_logo_banner(emblem, is_dark=False):
     # Scale 2x for retina / hi-dpi (displayed at max 220x60 in UI)
@@ -80,9 +100,9 @@ def main():
     
     # 1. Flutter app assets
     os.makedirs("flutter/assets", exist_ok=True)
-    icon_512 = make_square_emblem(emblem, 512)
+    icon_512 = make_square_rounded_icon(emblem, 512)
     icon_512.save("flutter/assets/icon.png", "PNG")
-    print("Guardado: flutter/assets/icon.png (512x512)")
+    print("Guardado: flutter/assets/icon.png (512x512 con fondo blanco redondeado)")
     
     logo_light = create_logo_banner(emblem, is_dark=False)
     logo_light.save("flutter/assets/logo.png", "PNG")
@@ -95,7 +115,7 @@ def main():
     
     # 2. Windows Executable Icon (flutter/windows/runner/resources/app_icon.ico)
     ico_sizes = [(16, 16), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)]
-    ico_imgs = [make_square_emblem(emblem, s[0]) for s in ico_sizes]
+    ico_imgs = [make_square_rounded_icon(emblem, s[0]) for s in ico_sizes]
     
     os.makedirs("flutter/windows/runner/resources", exist_ok=True)
     app_ico_path = "flutter/windows/runner/resources/app_icon.ico"
@@ -109,17 +129,17 @@ def main():
     print(f"Guardado: {res_ico_path}")
     
     tray_sizes = [(16, 16), (32, 32)]
-    tray_imgs = [make_square_emblem(emblem, s[0]) for s in tray_sizes]
+    tray_imgs = [make_square_rounded_icon(emblem, s[0]) for s in tray_sizes]
     tray_ico_path = "res/tray-icon.ico"
     tray_imgs[-1].save(tray_ico_path, format="ICO", sizes=tray_sizes)
     print(f"Guardado: {tray_ico_path}")
     
     icon_512.save("res/icon.png", "PNG")
     icon_512.save("res/mac-icon.png", "PNG")
-    make_square_emblem(emblem, 32).save("res/32x32.png", "PNG")
-    make_square_emblem(emblem, 64).save("res/64x64.png", "PNG")
-    make_square_emblem(emblem, 128).save("res/128x128.png", "PNG")
-    make_square_emblem(emblem, 256).save("res/128x128@2x.png", "PNG")
+    make_square_rounded_icon(emblem, 32).save("res/32x32.png", "PNG")
+    make_square_rounded_icon(emblem, 64).save("res/64x64.png", "PNG")
+    make_square_rounded_icon(emblem, 128).save("res/128x128.png", "PNG")
+    make_square_rounded_icon(emblem, 256).save("res/128x128@2x.png", "PNG")
     print("Guardados: res/ (32x32, 64x64, 128x128, 128x128@2x, icon.png, mac-icon.png)")
 
     # 4. Android App Icons (flutter/android/app/src/main/res/mipmap-*)
