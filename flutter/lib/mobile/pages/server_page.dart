@@ -7,6 +7,7 @@ import 'package:flutter_hbb/mobile/widgets/dialog.dart';
 import 'package:flutter_hbb/models/chat_model.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../common.dart';
 import '../../common/widgets/dialog.dart';
@@ -560,7 +561,67 @@ class ServerInfo extends StatelessWidget {
                           })
                     ])
             ]).marginOnly(left: 40, bottom: 15),
-            ConnectionStateNotification()
+            ConnectionStateNotification(),
+            const SizedBox(height: 14),
+            Material(
+              color: const Color(0xFF25D366).withOpacity(0.12),
+              borderRadius: BorderRadius.circular(8),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: () {
+                  final id = model.serverId.value.text.trim();
+                  final text = id.isNotEmpty
+                      ? 'Hola Soporte Kore, necesito asistencia técnica con mi tablet (ID: $id).'
+                      : 'Hola Soporte Kore, necesito asistencia técnica con mi tablet.';
+                  final url = 'https://wa.me/51959595000?text=${Uri.encodeComponent(text)}';
+                  launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.chat_bubble_outline_rounded,
+                        color: Color(0xFF25D366),
+                        size: 22,
+                      ).marginOnly(right: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text(
+                              "WhatsApp Soporte Técnico",
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF15803D),
+                              ),
+                            ),
+                            Text(
+                              "+51 959 595 000",
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.color
+                                    ?.withOpacity(0.7),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(
+                        Icons.open_in_new,
+                        size: 16,
+                        color: Color(0xFF25D366),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ],
         ));
   }

@@ -122,6 +122,57 @@ def main():
     make_square_emblem(emblem, 256).save("res/128x128@2x.png", "PNG")
     print("Guardados: res/ (32x32, 64x64, 128x128, 128x128@2x, icon.png, mac-icon.png)")
 
+    # 4. Android App Icons (flutter/android/app/src/main/res/mipmap-*)
+    android_res_base = "flutter/android/app/src/main/res"
+    densities = {
+        "mipmap-mdpi": {"launcher": 48, "fg": 108, "stat": 24},
+        "mipmap-hdpi": {"launcher": 72, "fg": 162, "stat": 36},
+        "mipmap-xhdpi": {"launcher": 96, "fg": 216, "stat": 48},
+        "mipmap-xxhdpi": {"launcher": 144, "fg": 324, "stat": 72},
+        "mipmap-xxxhdpi": {"launcher": 192, "fg": 432, "stat": 96},
+    }
+
+    for folder, dims in densities.items():
+        folder_path = os.path.join(android_res_base, folder)
+        os.makedirs(folder_path, exist_ok=True)
+        launcher_sz = dims["launcher"]
+        fg_sz = dims["fg"]
+        stat_sz = dims["stat"]
+
+        # ic_launcher_foreground.png (adaptive icon safe zone: ~65% centered on transparent)
+        fg_img = Image.new("RGBA", (fg_sz, fg_sz), (0, 0, 0, 0))
+        emblem_fg_sz = int(fg_sz * 0.66)
+        emblem_fg = emblem.copy()
+        emblem_fg.thumbnail((emblem_fg_sz, emblem_fg_sz), Image.LANCZOS)
+        offset_fg = ((fg_sz - emblem_fg.size[0]) // 2, (fg_sz - emblem_fg.size[1]) // 2)
+        fg_img.paste(emblem_fg, offset_fg, emblem_fg)
+        fg_img.save(os.path.join(folder_path, "ic_launcher_foreground.png"), "PNG")
+
+        # ic_launcher.png (rounded square white background with centered emblem)
+        launcher_img = Image.new("RGBA", (launcher_sz, launcher_sz), (255, 255, 255, 255))
+        emblem_l_sz = int(launcher_sz * 0.72)
+        emblem_l = emblem.copy()
+        emblem_l.thumbnail((emblem_l_sz, emblem_l_sz), Image.LANCZOS)
+        offset_l = ((launcher_sz - emblem_l.size[0]) // 2, (launcher_sz - emblem_l.size[1]) // 2)
+        launcher_img.paste(emblem_l, offset_l, emblem_l)
+        launcher_img.save(os.path.join(folder_path, "ic_launcher.png"), "PNG")
+
+        # ic_launcher_round.png (circular white background)
+        round_mask = Image.new("L", (launcher_sz, launcher_sz), 0)
+        draw_mask = ImageDraw.Draw(round_mask)
+        draw_mask.ellipse((0, 0, launcher_sz - 1, launcher_sz - 1), fill=255)
+        round_img = Image.new("RGBA", (launcher_sz, launcher_sz), (0, 0, 0, 0))
+        round_white = Image.new("RGBA", (launcher_sz, launcher_sz), (255, 255, 255, 255))
+        round_white.paste(emblem_l, offset_l, emblem_l)
+        round_img.paste(round_white, (0, 0), round_mask)
+        round_img.save(os.path.join(folder_path, "ic_launcher_round.png"), "PNG")
+
+        # ic_stat_logo.png (notification emblem)
+        stat_img = make_square_emblem(emblem, stat_sz)
+        stat_img.save(os.path.join(folder_path, "ic_stat_logo.png"), "PNG")
+
+        print(f"Guardado Android {folder}: ic_launcher ({launcher_sz}x{launcher_sz}), foreground ({fg_sz}x{fg_sz}), round, stat ({stat_sz}x{stat_sz})")
+
     print("\n¡Todos los iconos y logos de KoreDesk han sido generados exitosamente!")
 
 if __name__ == "__main__":

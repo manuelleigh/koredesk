@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">RustDesk</string>
-    <string name="accessibility_service_description">Allow other devices to control your phone using virtual touch, when RustDesk screen sharing is established</string>
-    <string name="foreground_service_special_use_subtype">Keeps the RustDesk remote desktop host available for authorized unattended connections and foreground notifications without starting screen capture before user approval.</string>
+    <string name="app_name">KoreDesk</string>
+    <string name="accessibility_service_description">Permite que otros dispositivos controlen tu tablet o equipo mediante toques táctiles cuando la sesión de KoreDesk está establecida.</string>
+    <string name="foreground_service_special_use_subtype">Mantiene el servicio de KoreDesk activo en segundo plano para permitir conexiones desatendidas de soporte técnico autorizadas.</string>
 </resources>
